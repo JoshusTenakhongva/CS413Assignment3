@@ -89,6 +89,9 @@ player = {//player's metadata
 var playerVis = new PIXI.Sprite(PIXI.Texture.from( "player_character.png" ));
 	playerVis.x = player.x;
 	playerVis.y = player.y;
+	
+var gameRunning = false;
+
 PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
 
 PIXI.loader
@@ -96,22 +99,8 @@ PIXI.loader
   .add('tileset', 'tileset.png')
   .add('blob', 'player_character.png')
   .load(ready);
-//Createst the World and the Tileset background
-function ready() 
-{
-  var tu = new TileUtilities(PIXI);
-  world = tu.makeTiledWorld("map_json", "tileset.png");
-  stage.addChild(world);
   
-  var blob = world.getObject("blob");
   
-  player = new PIXI.Sprite(PIXI.loader.resources.blob.texture);
-  player.x = blob.x;
-  player.y = blob.y;
-  player.anchor.x = 0.0;
-  player.anchor.y = 1.0;
-var gameRunning = false;
-	
 function keydownHandler(key) {
     //w
     if(key.keyCode == 87 && player.isJumping == false) {
@@ -142,22 +131,28 @@ function keyupHandler(key) {
     }
 } 
 	
-
-	
 document.addEventListener('keydown', keydownHandler);	
-document.addEventListener('keyup', keyupHandler);	
-	
-function animate()
+document.addEventListener('keyup', keyupHandler);
+
+
+
+//Createst the World and the Tileset background
+function ready() 
 {
-	requestAnimationFrame( animate );
+  var tu = new TileUtilities(PIXI);
+  world = tu.makeTiledWorld("map_json", "tileset.png");
+  stage.addChild(world);
+  
+  var blob = world.getObject("blob");
+  
+  player = new PIXI.Sprite(PIXI.loader.resources.blob.texture);
+  player.x = blob.x;
+  player.y = blob.y;
+  player.anchor.x = 0.0;
+  player.anchor.y = 1.0;
 	
-	if(gameRunning)
-	{
-		moveCharacter();
-	}
 	
-	renderer.render( stage );
-}
+	
   // Find the entity layer
   var entity_layer = world.getObject("Entities");
   entity_layer.addChild(player);
@@ -172,6 +167,10 @@ function animate()
 function animate(timestamp)
 {
 	requestAnimationFrame(animate);
+	if(gameRunning)
+	{
+		moveCharacter();
+	}
 	update_camera();
 	renderer.render(stage);
  }
@@ -323,7 +322,7 @@ function backButtonClickHandler( e )
 function update_camera() {
   stage.x = -player.x*GAME_SCALE + GAME_WIDTH/2 - player.width/2*GAME_SCALE;
   stage.y = -player.y*GAME_SCALE + GAME_HEIGHT/2 + player.height/2*GAME_SCALE;
-  stage.x = -Math.max(0, Math.min(world.worldWidth*GAME_SCALE - GAME_WIDTH, -stage.x));
-  stage.y = -Math.max(0, Math.min(world.worldHeight*GAME_SCALE - GAME_HEIGHT, -stage.y));
+ // stage.x = -Math.max(0, Math.min(world.worldWidth*GAME_SCALE - GAME_WIDTH, -stage.x));
+ // stage.y = -Math.max(0, Math.min(world.worldHeight*GAME_SCALE - GAME_HEIGHT, -stage.y));
 }
 
