@@ -36,7 +36,7 @@ stage.addChild( titleScreen );
 * Create menu buttons
 */
 // Create start button
-var startButton = new PIXI.Sprite( PIXI.Texture.fromImage( "startButton.png" ));
+var startButton = new PIXI.Sprite( PIXI.Texture.from( "startButton.png" ));
 startButton.interactive = true;
 startButton.on( 'mousedown', startButtonClickHandler );
 startButton.position.x = 400;
@@ -45,7 +45,7 @@ startButton.anchor.x = 0.5;
 startButton.anchor.y = 0.5;
 
 // Create tutorial button
-var tutorialButton = new PIXI.Sprite( PIXI.Texture.fromImage( "tutorialButton.png" ));
+var tutorialButton = new PIXI.Sprite( PIXI.Texture.from( "tutorialButton.png" ));
 tutorialButton.interactive = true;
 tutorialButton.on( 'mousedown', tutorialButtonClickHandler );
 tutorialButton.position.x = 500;
@@ -54,7 +54,7 @@ tutorialButton.anchor.x = 0.5;
 tutorialButton.anchor.y = 0.5;
 
 // create credits button
-var creditsButton = new PIXI.Sprite( PIXI.Texture.fromImage( "creditsButton.png" ));
+var creditsButton = new PIXI.Sprite( PIXI.Texture.from( "creditsButton.png" ));
 creditsButton.interactive = true;
 creditsButton.on( 'mousedown', creditsButtonClickHandler );
 creditsButton.position.x = 300;
@@ -63,7 +63,7 @@ creditsButton.anchor.x = 0.5;
 creditsButton.anchor.y = 0.5;
 
 // create back button
-var backButton = new PIXI.Sprite( PIXI.Texture.fromImage( "backButton.png" ));
+var backButton = new PIXI.Sprite( PIXI.Texture.from( "backButton.png" ));
 backButton.interactive = true;
 backButton.on( 'mousedown', backButtonClickHandler );
 
@@ -81,10 +81,14 @@ player = {//player's metadata
 		speed: 3,
 		xVel: 0,
 		yVel: 0,
-		onGround: false,
+		moveLeft: false,
+		moveRight: false,
 		isJumping: false
 	};
 
+var playerVis = new PIXI.Sprite(PIXI.Texture.from( "player_character.png" ));
+	playerVis.x = player.x;
+	playerVis.y = player.y;
 PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
 
 PIXI.loader
@@ -106,7 +110,54 @@ function ready()
   player.y = blob.y;
   player.anchor.x = 0.0;
   player.anchor.y = 1.0;
+var gameRunning = false;
+	
+function keydownHandler(key) {
+    //w
+    if(key.keyCode == 87 && player.isJumping == false) {
+        player.isJumping = true;
+		player.yVel = -2;
+    }
 
+    //a
+    if(key.keyCode == 65) {
+		player.moveRight = true;
+    }
+
+    //d
+    if(key.keyCode == 68) {
+		player.moveLeft = true;
+    }
+}	
+
+function keyupHandler(key) {
+    //a
+    if(key.keyCode == 65) {
+		player.moveRight = false;
+    }
+
+    //d
+    if(key.keyCode == 68) {
+		player.moveLeft = false;
+    }
+} 
+	
+
+	
+document.addEventListener('keydown', keydownHandler);	
+document.addEventListener('keyup', keyupHandler);	
+	
+function animate()
+{
+	requestAnimationFrame( animate );
+	
+	if(gameRunning)
+	{
+		moveCharacter();
+	}
+	
+	renderer.render( stage );
+}
   // Find the entity layer
   var entity_layer = world.getObject("Entities");
   entity_layer.addChild(player);
@@ -128,6 +179,39 @@ function animate(timestamp)
 initializeTitleScreen();
 animate();
 
+function moveCharacter()
+{	
+	var newPosX = player.x + (player.speed * player.xVel);
+	var newPosY = player.y + (player.speed * player.yVel);
+
+	//in bounds check so we dont fall off the world
+	if(  newPosY < 500 )
+	{
+			player.y += player.speed * player.yVel;
+	}else
+	{
+		player.isJumping = false;
+	}
+		
+	if( player.yVel < 2 )
+	{
+		player.yVel += .05;
+	}
+	
+	if( player.moveLeft == true )
+	{
+		player.x += 1.5;
+	}
+	
+	if( player.moveRight == true)
+	{
+		player.x -= 1.5;
+	}
+	
+	playerVis.x = player.x;
+	playerVis.y = player.y;
+	
+}
 
 /*
 * Desc: Initializes the opening title screen for the game
@@ -166,8 +250,11 @@ function startButtonClickHandler( e )
   // Add the container that holds the main game to the stage
 	stage.addChild( gameScreen );
 	stage.addChild(world);
+	gameScreen.addChild( playerVis );
+
 	renderer.backgroundColor = 0xffb18a;
   gameScreen.addChild( backButton );
+  gameRunning = true;
 	}
 
 /*
@@ -223,10 +310,12 @@ function backButtonClickHandler( e )
 	stage.addChild( titleScreen );
 
 	stage.removeChild( gameScreen );
+	stage.removeChild( playerVis );
 	stage.removeChild( creditsScreen );
 	stage.removeChild( tutorialScreen );
 
 	renderer.backgroundColor = 0x6ac48a;
+	gameRunning = false;
 	}
 /*
 *	Moves the camera relative to the player's position
